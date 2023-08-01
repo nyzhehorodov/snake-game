@@ -45,7 +45,7 @@ fastify.get('/highscore', async (request, reply) => {
 const start = async () => {
     try {
         const dbCred = DB_USER ? `${DB_USER}:${DB_PASS}@` : '';
-        const connectionString = `mongodb://${dbCred}${DB_HOST}:${DB_PORT}/${DB_NAME}`;
+        const connectionString = `mongodb://${dbCred}${DB_HOST}:${DB_PORT}/${DB_NAME}?authSource=admin`;
         await mongoose.connect(connectionString, {user: DB_USER, pass: DB_PASS, useNewUrlParser: true, useUnifiedTopology: true});
         console.log('MongoDB connected...');
         await fastify.listen({
