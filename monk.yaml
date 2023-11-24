@@ -1,0 +1,108 @@
+namespace: snake-game
+
+mongodb:
+  defines: runnable
+  inherits: mongodb/mongodb
+  metadata:
+    name: mongodb
+    description: MongoDB database for storing high scores
+    icon: >-
+      https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRA8VbFgxH-i78AZmNqD93mVRkTRd30POqLeCmg9T05ug&s
+  variables:
+    mongo-image:
+      type: string
+      value: latest
+      description: ''
+    mongo-init-database:
+      type: string
+      value: mongo
+      description: ''
+    mongo-init-password:
+      type: string
+      value: password
+      description: ''
+    mongo-init-username:
+      type: string
+      value: mongo
+      description: ''
+    mongodb-image:
+      type: string
+      value: latest
+      description: ''
+
+snake-game-backend:
+  defines: runnable
+  metadata:
+    name: snake-game-backend
+    description: >-
+      Backend service for the snake game, handling game logic and high-score
+      chart
+    icon: https://emojiapi.dev/api/v1/robot.svg
+  containers:
+    snake-game-backend:
+      image: env-2645.registry.local/snake-game-backend:main-de90c06
+      build: .
+      dockerfile: Dockerfile.snake-game-backend
+  services:
+    http-server-port:
+      description: HTTP server listening port
+      container: snake-game-backend
+      port: 3001
+      host-port: 3001
+      publish: true
+      protocol: tcp
+  connections:
+    database-connection:
+      target: snake-game/mongodb
+      service: mongodb
+  variables:
+    db-host:
+      env: DB_HOST
+      type: string
+      value: <- connection-hostname("database-connection")
+      description: Hostname for the database server
+    db-port:
+      env: DB_PORT
+      type: int
+      value: <- connection-port("database-connection")
+      description: Port for the database server
+    db-name:
+      env: DB_NAME
+      type: string
+      value: mongo
+      description: Database name
+    db-user:
+      env: DB_USER
+      type: string
+      value: mongo
+      description: Username for the database
+    db-pass:
+      env: DB_PASS
+      type: string
+      value: password
+      description: Password for the database
+
+cobra-frontend:
+  defines: runnable
+  metadata:
+    name: cobra-frontend
+    description: Frontend service for the snake game, providing the user interface
+    icon: https://emojiapi.dev/api/v1/robot.svg
+  containers:
+    cobra-frontend:
+      image: env-2645.registry.local/cobra-frontend:main-de90c06
+      build: .
+      dockerfile: Dockerfile.cobra-frontend
+  services: {}
+  connections:
+    highscore-api:
+      target: snake-game/snake-game-backend
+      service: http-server-port
+  variables: {}
+
+stack:
+  defines: group
+  members:
+    - snake-game/mongodb
+    - snake-game/snake-game-backend
+    - snake-game/cobra-frontend
